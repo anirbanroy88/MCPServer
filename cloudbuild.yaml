@@ -1,0 +1,10 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-f', 'openFigi/Dockerfile',
+      '-t', 'asia-east1-docker.pkg.dev/mcpserver-508404/mcp-servers/openfigi-mcp:v1',
+      '.'
+    ]
+images:
+  - 'asia-east1-docker.pkg.dev/mcpserver-508404/mcp-servers/openfigi-mcp:v1'
