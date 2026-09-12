@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "key"
+  ],
+  "properties": {
+    "key": {
+      "type": "string",
+      "enum": [
+        "idType",
+        "exchCode",
+        "micCode",
+        "currency",
+        "marketSecDes",
+        "securityType",
+        "securityType2",
+        "stateCode"
+      ]
+    }
+  }
+}

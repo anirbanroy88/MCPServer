@@ -1,0 +1,26 @@
+spring:
+  main:
+    web-application-type: servlet
+  ai:
+    mcp:
+      server:
+        stdio: false
+        protocol: STREAMABLE
+        streamable-http:
+          mcp-endpoint: /mcp
+server:
+  address: ${SERVER_ADDRESS:127.0.0.1}
+  port: ${PORT:8080}
+  max-http-request-header-size: 16KB
+  error:
+    include-message: never
+    include-stacktrace: never
+mcp:
+  security:
+    mode: ${MCP_SECURITY_MODE:token}
+    token: ${MCP_ACCESS_TOKEN:}
+    issuer: ${MCP_OAUTH_ISSUER:}
+    audience: ${MCP_OAUTH_AUDIENCE:}
+    public-url: ${MCP_PUBLIC_URL:}
+    allowed-subjects: ${MCP_ALLOWED_SUBJECTS:}
+    allowed-origins: ${MCP_ALLOWED_ORIGINS:}

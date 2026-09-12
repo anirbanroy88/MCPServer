@@ -1,0 +1,5 @@
+{$MCP_HOSTNAME} {
+    reverse_proxy openfigi:8080 {
+        flush_interval -1
+    }
+}

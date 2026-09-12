@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: openfigi-mcp
+  profiles:
+    default: stdio
+  main:
+    banner-mode: off
+  ai:
+    mcp:
+      server:
+        name: openfigi-mcp
+        version: 0.1.0
+        type: SYNC
+        instructions: "Read-only OpenFIGI instrument discovery. Return all matches; a ticker can be ambiguous. Search/filter return one page. Credentials are supplied by the client transport, never tool arguments."
+        request-timeout: 30s
+        capabilities:
+          tool: true
+          resource: false
+          prompt: false
+          completion: false
+        tool-change-notification: false
+        resource-change-notification: false
+        prompt-change-notification: false

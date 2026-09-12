@@ -1,17 +1,18 @@
-# Compiled class file
+# Gradle & Build outputs
+.gradle/
+build/
+**/build/
+bin/
+**/bin/
+out/
+**/out/
+target/
+**/target/
+classes/
+**/classes/
 *.class
 
-# Log file
-*.log
-
-# BlueJ files
-*.ctxt
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files #
-*.jar
+# Package Files (except Gradle wrapper JAR)
 *.war
 *.nar
 *.ear
@@ -19,6 +20,50 @@
 *.tar.gz
 *.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+# Logs
+*.log
+logs/
+**/logs/
+log/
+**/log/
 hs_err_pid*
 replay_pid*
+
+# Secrets, passwords, and sensitive properties / configurations
+*.env
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.pfx
+*.p12
+*.keystore
+*.jks
+*secret*.properties
+*password*.properties
+*credential*.properties
+*secrets*.yml
+*secrets*.yaml
+*secret*.yml
+*secret*.yaml
+*password*.yml
+*password*.yaml
+local.properties
+*.local.properties
+application-local.*
+application-secret.*
+application-secrets.*
+
+# IDE and Editor files
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.mtj.tmp/
+*.ctxt
+.vscode/
+!.vscode/settings.json
+.DS_Store
+Thumbs.db

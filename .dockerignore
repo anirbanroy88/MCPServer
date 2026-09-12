@@ -1,0 +1,6 @@
+**
+!openFigi/
+!openFigi/Dockerfile
+!openFigi/build/
+!openFigi/build/libs/
+!openFigi/build/libs/openfigi-mcp.jar

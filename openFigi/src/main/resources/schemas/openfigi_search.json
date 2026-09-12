@@ -1,0 +1,124 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "query": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000
+    },
+    "start": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 8192
+    },
+    "filters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "exchCode": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "micCode": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "currency": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "marketSecDes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "securityType": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "securityType2": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "includeUnlistedEquities": {
+          "type": "boolean"
+        },
+        "optionType": {
+          "type": "string",
+          "enum": [
+            "Call",
+            "Put"
+          ]
+        },
+        "strike": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "contractSize": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "coupon": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "expiration": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          }
+        },
+        "maturity": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          }
+        },
+        "stateCode": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    }
+  }
+}

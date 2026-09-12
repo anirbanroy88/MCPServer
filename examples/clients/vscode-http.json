@@ -1,0 +1,26 @@
+{
+  "inputs": [
+    {
+      "id": "mcp-token",
+      "type": "promptString",
+      "description": "Personal MCP bearer token",
+      "password": true
+    },
+    {
+      "id": "openfigi-key",
+      "type": "promptString",
+      "description": "OpenFIGI key (leave blank for free access)",
+      "password": true
+    }
+  ],
+  "servers": {
+    "openfigi": {
+      "type": "http",
+      "url": "https://figi.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ${input:mcp-token}",
+        "X-OpenFIGI-API-Key": "${input:openfigi-key}"
+      }
+    }
+  }
+}

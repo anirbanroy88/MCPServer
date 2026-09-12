@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "openfigi": {
+      "command": "java",
+      "args": [
+        "-jar",
+        "C:/absolute/path/MCPServer/openFigi/build/libs/openfigi-mcp.jar",
+        "--spring.profiles.active=stdio"
+      ],
+      "env": {
+        "OPENFIGI_API_KEY": ""
+      }
+    }
+  }
+}

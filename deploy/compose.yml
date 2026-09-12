@@ -1,0 +1,40 @@
+services:
+  openfigi:
+    build:
+      context: ..
+      dockerfile: openFigi/Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: http
+      SERVER_ADDRESS: 0.0.0.0
+      MCP_SECURITY_MODE: ${MCP_SECURITY_MODE:-token}
+      MCP_ACCESS_TOKEN: ${MCP_ACCESS_TOKEN:-}
+      MCP_OAUTH_ISSUER: ${MCP_OAUTH_ISSUER:-}
+      MCP_OAUTH_AUDIENCE: ${MCP_OAUTH_AUDIENCE:-}
+      MCP_PUBLIC_URL: https://${MCP_HOSTNAME:?Set MCP_HOSTNAME}/mcp
+      MCP_ALLOWED_SUBJECTS: ${MCP_ALLOWED_SUBJECTS:-}
+      MCP_ALLOWED_ORIGINS: ${MCP_ALLOWED_ORIGINS:-}
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+  caddy:
+    image: caddy:2-alpine
+    environment:
+      MCP_HOSTNAME: ${MCP_HOSTNAME:?Set MCP_HOSTNAME}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - openfigi
+    restart: unless-stopped
+volumes:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "openfigi": {
+      "url": "https://figi.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer REPLACE_WITH_YOUR_MCP_TOKEN",
+        "X-OpenFIGI-API-Key": ""
+      }
+    }
+  }
+}
