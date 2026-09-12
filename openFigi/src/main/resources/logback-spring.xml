@@ -1,5 +1,5 @@
 <configuration>
-    <property name="LOG_DIR" value="${MCP_LOG_DIR:-C:/Users/anirb/log/mcpServer}"/>
+    <property name="LOG_DIR" value="${MCP_LOG_DIR:-${user.home}/log/mcpServer}"/>
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
     <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
         <target>System.err</target>
