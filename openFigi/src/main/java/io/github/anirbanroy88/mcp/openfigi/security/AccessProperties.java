@@ -8,7 +8,9 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
 public record AccessProperties(
         @DefaultValue("token") Mode mode, @DefaultValue("") String token,
         @DefaultValue("") String issuer, @DefaultValue("") String audience,
-        @DefaultValue("") String publicUrl, Set<String> allowedSubjects, Set<String> allowedOrigins) {
+        @DefaultValue("") String publicUrl, @DefaultValue("") String clientId,
+        @DefaultValue("") String clientSecret, @DefaultValue("") String redirectUri,
+        Set<String> allowedSubjects, Set<String> allowedOrigins) {
     public enum Mode { TOKEN, OAUTH, NONE }
     public AccessProperties {
         allowedSubjects = clean(allowedSubjects);

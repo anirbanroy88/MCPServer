@@ -23,7 +23,36 @@ The hostname must resolve to your host, ports 80/443 must be reachable, and Cadd
 
 Set `MCP_SECURITY_MODE=token` and a random `MCP_ACCESS_TOKEN` of at least 32 characters. Clients must send that bearer token on every request. This mode has one personal identity and is not an OAuth authorization server.
 
-## OAuth mode for private cloud-client connections
+## Google OAuth 2.0 Mode
+
+To use Google as your OAuth Identity Provider:
+
+1. **Create OAuth Client ID in Google Cloud Console**:
+   - Navigate to **APIs & Services > Credentials > Create Credentials > OAuth client ID**.
+   - **Application Type**: `Web application`
+   - **Name**: `OpenFIGI MCP Server`
+   - **Authorized JavaScript origins**:
+     - `https://openfigi-mcp-941250209856.asia-east1.run.app` (or your custom domain)
+     - `http://localhost:8080` (for local development)
+   - **Authorized redirect URIs**:
+     - `https://openfigi-mcp-941250209856.asia-east1.run.app/login/oauth2/code/google`
+     - `http://localhost:8080/login/oauth2/code/google`
+     - Add external client callback URLs (e.g. ChatGPT / Claude Web MCP redirect URL) if connecting external web clients.
+
+2. **Configure Environment Variables**:
+   ```text
+   MCP_SECURITY_MODE=oauth
+   MCP_OAUTH_ISSUER=https://accounts.google.com
+   MCP_PUBLIC_URL=https://openfigi-mcp-941250209856.asia-east1.run.app/mcp
+   MCP_OAUTH_CLIENT_ID=<your-google-client-id>.apps.googleusercontent.com
+   MCP_OAUTH_CLIENT_SECRET=<your-google-client-secret>
+   MCP_OAUTH_REDIRECT_URI=https://openfigi-mcp-941250209856.asia-east1.run.app/login/oauth2/code/google
+   MCP_OAUTH_AUDIENCE=<your-google-client-id>.apps.googleusercontent.com
+   MCP_ALLOWED_SUBJECTS=your-email@gmail.com,other-email@gmail.com
+   ```
+   *(Leave `MCP_ALLOWED_SUBJECTS` empty to allow all valid Google accounts to access the server).*
+
+## Generic OAuth mode for private cloud-client connections
 
 Set:
 

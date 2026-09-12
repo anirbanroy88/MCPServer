@@ -37,7 +37,7 @@ import static org.mockito.Mockito.doAnswer;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
         "mcp.security.mode=oauth", "mcp.security.issuer=https://issuer.example",
         "mcp.security.public-url=https://figi.example/mcp", "mcp.security.audience=https://figi.example/mcp",
-        "mcp.security.allowed-subjects=owner", "debug=false"})
+        "mcp.security.allowed-subjects=owner,owner@example.com", "debug=false"})
 @ActiveProfiles("http")
 class OAuthAccessTest {
     static final MockOpenFigi UPSTREAM = new MockOpenFigi();
@@ -64,10 +64,15 @@ class OAuthAccessTest {
         } catch (Exception error) { throw new IllegalStateException(error); }
     }
     String token(String audience, String subject, String scope, KeyPair keys) throws Exception {
-        var claims = new JWTClaimsSet.Builder().issuer("https://issuer.example").audience(audience)
-                .subject(subject).claim("scope", scope).issueTime(Date.from(Instant.now().minusSeconds(30)))
-                .expirationTime(Date.from(Instant.now().plusSeconds(600))).build();
-        var jwt = new SignedJWT(new JWSHeader(JWSAlgorithm.RS256), claims);
+        return token(audience, subject, scope, null, keys);
+    }
+    String token(String audience, String subject, String scope, String email, KeyPair keys) throws Exception {
+        var builder = new JWTClaimsSet.Builder().issuer("https://issuer.example").audience(audience)
+                .subject(subject).issueTime(Date.from(Instant.now().minusSeconds(30)))
+                .expirationTime(Date.from(Instant.now().plusSeconds(600)));
+        if (scope != null) builder.claim("scope", scope);
+        if (email != null) builder.claim("email", email);
+        var jwt = new SignedJWT(new JWSHeader(JWSAlgorithm.RS256), builder.build());
         jwt.sign(new RSASSASigner(keys.getPrivate()));
         return jwt.serialize();
     }
@@ -97,6 +102,16 @@ class OAuthAccessTest {
     @Test void restrictsSubjectsAndScopes() throws Exception {
         assertThat(post(token("https://figi.example/mcp", "someone-else", "mcp:tools", KEYS)).statusCode()).isEqualTo(403);
         assertThat(post(token("https://figi.example/mcp", "owner", "unrelated", KEYS)).statusCode()).isEqualTo(403);
+    }
+    @Test void allowsAuthorizedEmailWhenSubjectDoesNotMatchDirectly() throws Exception {
+        var token = token("https://figi.example/mcp", "google-sub-9999", "mcp:tools", "owner@example.com", KEYS);
+        var transport = HttpClientStreamableHttpTransport.builder("http://127.0.0.1:" + port)
+                .endpoint("/mcp").customizeRequest(builder -> builder.header("Authorization", "Bearer " + token)).build();
+        try (var client = McpClient.sync(transport).build()) {
+            client.initialize();
+            assertThat(client.callTool(new McpSchema.CallToolRequest("openfigi_values", Map.of("key", "idType"))).isError()).isFalse();
+        }
+        assertThat(post(token("https://figi.example/mcp", "google-sub-9999", "mcp:tools", "unauthorized@example.com", KEYS)).statusCode()).isEqualTo(403);
     }
     @Test void publishesMetadataAndDiscoveryChallenge() throws Exception {
         var unauthorized = post(null);

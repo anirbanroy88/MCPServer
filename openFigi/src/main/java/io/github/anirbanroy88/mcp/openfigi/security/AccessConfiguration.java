@@ -57,11 +57,26 @@ public class AccessConfiguration {
                     if (properties.mode() == AccessProperties.Mode.NONE) auth.requestMatchers("/mcp").permitAll();
                     else auth.requestMatchers("/mcp").access((authentication, context) -> {
                         var principal = authentication.get();
-                        boolean scope = principal.getAuthorities().stream()
+                        if (principal == null || !principal.isAuthenticated()) {
+                            return new AuthorizationDecision(false);
+                        }
+                        boolean isGoogle = isGoogleIssuer(properties.issuer());
+                        boolean scope = isGoogle || principal.getAuthorities().stream()
                                 .anyMatch(a -> a.getAuthority().equals("SCOPE_mcp:tools"));
-                        boolean subject = properties.allowedSubjects().isEmpty()
-                                || properties.allowedSubjects().contains(principal.getName());
-                        return new AuthorizationDecision(principal.isAuthenticated() && scope && subject);
+
+                        boolean subject;
+                        if (properties.allowedSubjects().isEmpty()) {
+                            subject = true;
+                        } else {
+                            String name = principal.getName();
+                            String email = null;
+                            if (principal.getPrincipal() instanceof Jwt jwt) {
+                                email = jwt.getClaimAsString("email");
+                            }
+                            subject = properties.allowedSubjects().contains(name)
+                                    || (email != null && properties.allowedSubjects().contains(email));
+                        }
+                        return new AuthorizationDecision(scope && subject);
                     });
                     auth.anyRequest().denyAll();
                 });
@@ -77,17 +92,63 @@ public class AccessConfiguration {
     @ConditionalOnProperty(name = "mcp.security.mode", havingValue = "oauth")
     JwtDecoder jwtDecoder(AccessProperties properties) {
         validate(properties);
-        var decoder = NimbusJwtDecoder.withIssuerLocation(properties.issuer()).build();
-        decoder.setJwtValidator(jwtValidator(properties.issuer(), properties.audience()));
+        NimbusJwtDecoder decoder;
+        if (isGoogleIssuer(properties.issuer())) {
+            decoder = NimbusJwtDecoder.withJwkSetUri("https://www.googleapis.com/oauth2/v3/certs").build();
+        } else {
+            decoder = NimbusJwtDecoder.withIssuerLocation(properties.issuer()).build();
+        }
+        decoder.setJwtValidator(jwtValidator(properties.issuer(), properties.audience(), properties.clientId()));
         return decoder;
     }
 
+    public static boolean isGoogleIssuer(String issuer) {
+        return "https://accounts.google.com".equals(issuer) || "accounts.google.com".equals(issuer);
+    }
+
     public static OAuth2TokenValidator<Jwt> jwtValidator(String issuer, String audience) {
-        OAuth2TokenValidator<Jwt> audienceValidator = token -> token.getAudience() != null && token.getAudience().contains(audience)
-                && token.getExpiresAt() != null && token.getSubject() != null && !token.getSubject().isBlank()
-                ? OAuth2TokenValidatorResult.success()
-                : OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token", "Token audience is invalid", null));
-        return new DelegatingOAuth2TokenValidator<>(JwtValidators.createDefaultWithIssuer(issuer), audienceValidator);
+        return jwtValidator(issuer, audience, "");
+    }
+
+    public static OAuth2TokenValidator<Jwt> jwtValidator(String issuer, String audience, String clientId) {
+        OAuth2TokenValidator<Jwt> customValidator = token -> {
+            if (token.getExpiresAt() == null || token.getSubject() == null || token.getSubject().isBlank()) {
+                return OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token", "Token is missing subject or expiry", null));
+            }
+
+            String tokenIssuer = "";
+            if (token.getIssuer() != null) {
+                tokenIssuer = token.getIssuer().toString();
+            } else if (token.getClaim("iss") != null) {
+                tokenIssuer = token.getClaim("iss").toString();
+            }
+
+            boolean validIssuer;
+            if (isGoogleIssuer(issuer)) {
+                validIssuer = isGoogleIssuer(tokenIssuer);
+            } else {
+                validIssuer = issuer.equals(tokenIssuer);
+            }
+            if (!validIssuer) {
+                return OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token", "Token issuer is invalid", null));
+            }
+
+            String targetAud = !audience.isBlank() ? audience : clientId;
+            boolean audMatches = token.getAudience() != null && token.getAudience().contains(targetAud);
+            boolean azpMatches = !clientId.isBlank() && clientId.equals(token.getClaimAsString("azp"));
+            boolean directClientIdMatches = !clientId.isBlank() && token.getAudience() != null && token.getAudience().contains(clientId);
+
+            if (!audMatches && !azpMatches && !directClientIdMatches) {
+                return OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token", "Token audience is invalid", null));
+            }
+
+            return OAuth2TokenValidatorResult.success();
+        };
+
+        if (isGoogleIssuer(issuer)) {
+            return customValidator;
+        }
+        return new DelegatingOAuth2TokenValidator<>(JwtValidators.createDefaultWithIssuer(issuer), customValidator);
     }
 
     static void validate(AccessProperties properties) {
@@ -99,8 +160,10 @@ public class AccessConfiguration {
             requireHttps(properties.publicUrl(), "MCP_PUBLIC_URL");
             if (!URI.create(properties.publicUrl()).getPath().equals("/mcp"))
                 throw new IllegalStateException("MCP_PUBLIC_URL must end with /mcp");
-            if (!properties.publicUrl().equals(properties.audience()))
+            if (!isGoogleIssuer(properties.issuer()) && !properties.publicUrl().equals(properties.audience()))
                 throw new IllegalStateException("MCP_OAUTH_AUDIENCE must equal MCP_PUBLIC_URL");
+            if (isGoogleIssuer(properties.issuer()) && properties.audience().isBlank() && properties.clientId().isBlank())
+                throw new IllegalStateException("Google OAuth mode requires MCP_OAUTH_AUDIENCE or MCP_OAUTH_CLIENT_ID");
         }
     }
     private static void requireHttps(String value, String name) {
